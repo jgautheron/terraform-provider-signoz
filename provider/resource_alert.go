@@ -180,6 +180,12 @@ func (r *alertResource) buildRule(ctx context.Context, m *alertModel) (json.RawM
 	}
 	if !m.NotificationSettings.IsNull() {
 		rule["notificationSettings"] = json.RawMessage(m.NotificationSettings.ValueString())
+	} else {
+		// SigNoz rejects schemaVersion v2alpha1 rules without
+		// notificationSettings; supply a minimal default when the user omits it
+		// so per-threshold channel routing (channels in condition.thresholds)
+		// still works without forcing every alert to spell this out.
+		rule["notificationSettings"] = json.RawMessage(`{"groupBy":[],"renotify":{"enabled":false}}`)
 	}
 	if !m.Severity.IsNull() {
 		rule["severity"] = m.Severity.ValueString()

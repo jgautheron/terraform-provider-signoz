@@ -9,10 +9,12 @@ import (
 	"net/http"
 )
 
-// Alert rules use mixed API versions: writes go to /api/v2/rules, reads to
-// /api/v1/rules/{id}. The rule body is assembled by the resource layer (typed
-// top-level fields + JSON-blob condition/evaluation/notification_settings) and
-// passed through here as opaque JSON.
+// Alert rules are managed on /api/v1/rules. (SigNoz also exposes /api/v2/rules,
+// but that is a distinct, stricter API surface that rejects the v5/v2alpha1
+// rule body this provider emits — /api/v1/rules is the one that accepts it,
+// verified live against SigNoz 0.125.) The rule body is assembled by the
+// resource layer (typed top-level fields + JSON-blob condition / evaluation /
+// notification_settings) and passed through here as opaque JSON.
 
 // alertEnvelope wraps SigNoz's {"status","data"} response. The data object
 // carries the rule including its server-assigned id.
@@ -24,7 +26,7 @@ type alertEnvelope struct {
 // (including its id) so the resource can extract the id and refresh state.
 func (c *Client) CreateAlert(ctx context.Context, rule json.RawMessage) (json.RawMessage, error) {
 	var env alertEnvelope
-	if err := c.do(ctx, http.MethodPost, "/api/v2/rules", rule, &env); err != nil {
+	if err := c.do(ctx, http.MethodPost, "/api/v1/rules", rule, &env); err != nil {
 		return nil, err
 	}
 	return env.Data, nil
@@ -42,7 +44,7 @@ func (c *Client) GetAlert(ctx context.Context, id string) (json.RawMessage, erro
 // UpdateAlert replaces an alert rule by id.
 func (c *Client) UpdateAlert(ctx context.Context, id string, rule json.RawMessage) (json.RawMessage, error) {
 	var env alertEnvelope
-	if err := c.do(ctx, http.MethodPut, "/api/v2/rules/"+id, rule, &env); err != nil {
+	if err := c.do(ctx, http.MethodPut, "/api/v1/rules/"+id, rule, &env); err != nil {
 		return nil, err
 	}
 	return env.Data, nil
@@ -50,5 +52,5 @@ func (c *Client) UpdateAlert(ctx context.Context, id string, rule json.RawMessag
 
 // DeleteAlert removes an alert rule by id.
 func (c *Client) DeleteAlert(ctx context.Context, id string) error {
-	return c.do(ctx, http.MethodDelete, "/api/v2/rules/"+id, nil, nil)
+	return c.do(ctx, http.MethodDelete, "/api/v1/rules/"+id, nil, nil)
 }

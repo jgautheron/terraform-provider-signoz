@@ -50,7 +50,7 @@ func TestDo_SetsAuthHeaderAndDecodes(t *testing.T) {
 		if got := r.Header.Get(authHeader); got != "tok123" {
 			t.Errorf("auth header: got %q", got)
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]string{"uuid": "abc"}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]string{"id": "abc"}})
 	}))
 	defer srv.Close()
 

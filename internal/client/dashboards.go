@@ -13,7 +13,7 @@ import (
 // full dashboard definition (title, layout, widgets, variables, …) as opaque
 // JSON — we round-trip it verbatim rather than modeling every nested field.
 type Dashboard struct {
-	UUID string          `json:"uuid"`
+	UUID string          `json:"id"`
 	Data json.RawMessage `json:"data"`
 }
 
