@@ -1,64 +1,71 @@
-# Terraform Provider Scaffolding (Terraform Plugin Framework)
+# Terraform Provider for SigNoz
 
-_This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework). The template repository built on the [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk) can be found at [terraform-provider-scaffolding](https://github.com/hashicorp/terraform-provider-scaffolding). See [Which SDK Should I Use?](https://developer.hashicorp.com/terraform/plugin/framework-benefits) in the Terraform documentation for additional information._
+A [Terraform](https://www.terraform.io) provider for self-hosted
+[SigNoz](https://signoz.io), built on the
+[Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework).
 
-This repository is a *template* for a [Terraform](https://www.terraform.io) provider. It is intended as a starting point for creating Terraform providers, containing:
+Manage your SigNoz observability config as code: dashboards, alerts,
+notification channels, saved views, and log pipelines.
 
-- A resource and a data source (`internal/provider/`),
-- Examples (`examples/`) and generated documentation (`docs/`),
-- Miscellaneous meta files.
+> **Status: early (v0.x).** Targets SigNoz Community >= 0.125 (v5 / v2alpha1
+> alert schema). Complex nested bodies are modeled as JSON strings (see below).
 
-These files contain boilerplate code that you will need to edit to create your own Terraform provider. Tutorials for creating Terraform providers can be found on the [HashiCorp Developer](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework) platform. _Terraform Plugin Framework specific guides are titled accordingly._
+## Resources
 
-Please see the [GitHub template repository documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) for how to create a new repository from this template on GitHub.
+| Resource | Manages | Notes |
+| --- | --- | --- |
+| `signoz_dashboard` | Dashboards | Full definition as a single `data` JSON blob |
+| `signoz_alert` | Alert rules | Typed top-level fields + JSON `condition`/`evaluation`/`notification_settings`; v5 defaults |
+| `signoz_notification_channel` | Slack/webhook/PagerDuty/email/OpsGenie/MS Teams channels | **Admin token required** |
+| `signoz_saved_view` | Logs/traces explorer saved views | |
+| `signoz_log_pipeline` | The log-processing pipeline set | **Singleton** — one per instance |
 
-Once you've written your provider, you'll want to [publish it on the Terraform Registry](https://developer.hashicorp.com/terraform/registry/providers/publishing) so that others can use it.
+## Design: JSON-blob fields
 
-## Requirements
+SigNoz's nested request bodies (dashboard layouts, alert conditions, pipeline
+definitions) change shape across versions. Rather than model every nested
+field — brittle against that churn — this provider keeps the deep bodies as
+JSON strings, validated with a semantic-JSON type so reordering keys or
+whitespace never produces a spurious plan diff. Export an object from the
+SigNoz UI ("Edit" -> "Show JSON") to bootstrap any blob.
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.24
+Config-as-code is authoritative: `Read` confirms a resource still exists but
+does not overwrite your config from the server (avoiding the round-trip drift
+that plagues round-tripping providers).
 
-## Building the Provider
+## Configuration
 
-1. Clone the repository
-1. Enter the repository directory
-1. Build the provider using the Go `install` command:
-
-```shell
-go install
+```hcl
+provider "signoz" {
+  endpoint     = "https://signoz.example.com" # or SIGNOZ_ENDPOINT
+  access_token = var.signoz_token             # or SIGNOZ_ACCESS_TOKEN (sensitive)
+}
 ```
 
-## Adding Dependencies
+| Argument | Env | Default | Purpose |
+| --- | --- | --- | --- |
+| `endpoint` | `SIGNOZ_ENDPOINT` | `http://localhost:3301` | Query-service base URL |
+| `access_token` | `SIGNOZ_ACCESS_TOKEN` | — | Service Account token (`SIGNOZ-API-KEY` header) |
+| `http_timeout` | `SIGNOZ_HTTP_TIMEOUT` | `35` | Per-request timeout (seconds) |
+| `http_max_retry` | `SIGNOZ_HTTP_MAX_RETRY` | `3` | Retries on 5xx/network errors |
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+Generate a token in the SigNoz UI: **Settings -> Service Accounts -> Add -> Keys -> Add Key**.
+Notification-channel management needs an **admin**-role account.
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
+See [`examples/`](./examples/) for per-resource usage and [`docs/`](./docs/) for the full schema reference.
 
-```shell
-go get github.com/author/dependency
-go mod tidy
+## Developing
+
+```bash
+go build ./...                 # compile
+go test ./...                  # unit tests
+make generate                  # regenerate docs/ (needs terraform on PATH)
+make testacc                   # acceptance tests — needs a live SigNoz + TF_ACC
 ```
 
-Then commit the changes to `go.mod` and `go.sum`.
+Acceptance tests require `SIGNOZ_ENDPOINT` + `SIGNOZ_ACCESS_TOKEN` pointing at a
+reachable SigNoz instance.
 
-## Using the Provider
+## License
 
-Fill this in for each provider
-
-## Developing the Provider
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
-
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-To generate or update documentation, run `make generate`.
-
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
-
-```shell
-make testacc
-```
+Apache-2.0.
