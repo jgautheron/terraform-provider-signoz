@@ -20,6 +20,26 @@ notification channels, saved views, and log pipelines.
 | `signoz_saved_view` | Logs/traces explorer saved views | |
 | `signoz_log_pipeline` | The log-processing pipeline set | **Singleton** — one per instance |
 
+## Usage
+
+Published on the [Terraform Registry](https://registry.terraform.io/providers/jgautheron/signoz/latest):
+
+```hcl
+terraform {
+  required_providers {
+    signoz = {
+      source  = "jgautheron/signoz"
+      version = "~> 0.1"
+    }
+  }
+}
+
+provider "signoz" {
+  endpoint     = "https://signoz.example.com" # or SIGNOZ_ENDPOINT
+  access_token = var.signoz_token             # or SIGNOZ_ACCESS_TOKEN
+}
+```
+
 ## Design: JSON-blob fields
 
 SigNoz's nested request bodies (dashboard layouts, alert conditions, pipeline
