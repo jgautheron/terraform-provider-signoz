@@ -1,12 +1,14 @@
 # Terraform Provider release workflow (Terraform Registry publish).
+# Fires on a v* tag: goreleaser builds the cross-platform binaries, signs the
+# checksums with the GPG key (GPG_PRIVATE_KEY / PASSPHRASE secrets), bundles
+# terraform-registry-manifest.json, and creates the GitHub release the
+# Terraform Registry ingests. workflow_dispatch is kept for manual re-runs.
 name: Release
 
-# Manual-only for now: this provider is consumed by the Pulumi bridge as a Go
-# module (git tags suffice for that), and Terraform Registry publishing is
-# deferred until GPG signing keys (GPG_PRIVATE_KEY / PASSPHRASE secrets) are
-# set up. Tagging the repo therefore does NOT fire this doomed-without-secrets
-# job; trigger it manually once registry publishing is wired.
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch: {}
 
 # Releases need permissions to read and write the repository contents.
