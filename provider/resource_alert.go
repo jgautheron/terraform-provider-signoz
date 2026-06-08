@@ -245,6 +245,10 @@ func (r *alertResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	if state.ID.ValueString() == "" {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if _, err := r.client.GetAlert(ctx, state.ID.ValueString()); err != nil {
 		if client.NotFound(err) {
 			resp.State.RemoveResource(ctx)

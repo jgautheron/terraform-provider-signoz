@@ -105,6 +105,10 @@ func (r *logPipelineResource) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if state.ID.ValueString() == "" {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if _, err := r.client.GetPipelines(ctx); err != nil {
 		if client.NotFound(err) {
 			resp.State.RemoveResource(ctx)

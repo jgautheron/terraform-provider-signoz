@@ -119,6 +119,10 @@ func (r *notificationChannelResource) Read(ctx context.Context, req resource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if state.ID.ValueString() == "" {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if _, err := r.client.GetChannel(ctx, state.ID.ValueString()); err != nil {
 		if client.NotFound(err) {
 			resp.State.RemoveResource(ctx)

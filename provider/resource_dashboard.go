@@ -91,6 +91,13 @@ func (r *dashboardResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
+	// No id yet (e.g. a Crossplane/Upjet Observe before Create) means the
+	// resource does not exist — don't issue a malformed GET .../dashboards/.
+	if state.ID.ValueString() == "" {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	got, err := r.client.GetDashboard(ctx, state.ID.ValueString())
 	if err != nil {
 		if client.NotFound(err) {

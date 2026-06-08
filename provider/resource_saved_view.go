@@ -118,6 +118,10 @@ func (r *savedViewResource) Read(ctx context.Context, req resource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if state.ID.ValueString() == "" {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if _, err := r.client.GetView(ctx, state.ID.ValueString()); err != nil {
 		if client.NotFound(err) {
 			resp.State.RemoveResource(ctx)
