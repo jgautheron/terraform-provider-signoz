@@ -1,5 +1,9 @@
 # Terraform Provider for SigNoz
 
+> **Deprecated and archived.** Use the official provider,
+> [SigNoz/terraform-provider-signoz](https://github.com/SigNoz/terraform-provider-signoz)
+> (registry `signoz/signoz`), which covers rules (`signoz_rule`), dashboards, channels and saved views.
+
 A [Terraform](https://www.terraform.io) provider for self-hosted
 [SigNoz](https://signoz.io), built on the
 [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework).
